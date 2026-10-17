@@ -1,5 +1,21 @@
 # ◈ GitInsight — GitHub Developer Analytics
 
+## ✨ New: Editorial Homepage + Interactive Web Dashboard
+
+GitInsight now includes a responsive, framework-free web frontend inspired by warm editorial portfolio design and a pastel modular analytics dashboard:
+
+- `index.html` — cream-colored portfolio landing page with a live dashboard entry point.
+- `dashboard.html` — dark sidebar + colorful analytics cards, repo explorer, rule-based health checks, Markdown exports.
+- `assets/style.css` — responsive desktop/mobile styling.
+- `assets/dashboard.js` — GitHub public REST API integration, filtering, charts, caching, error handling; no token needed.
+
+**Run web frontend locally:** from the repository root run `python3 -m http.server 8502` and open `http://localhost:8502/index.html` (dashboard at `/dashboard.html`). Works on static hosting such as GitHub Pages once Pages is enabled. The dashboard displays live public GitHub data; it does **not** fabricate summary metrics. Unauthenticated GitHub API requests have strict rate limits. No secrets are embedded in the frontend.
+
+The existing Streamlit/Python backend is still present and available with `streamlit run app.py`.
+
+---
+
+
 **一个无需登录、基于真实 GitHub 公开数据的可视化开发者分析工具。**
 
 GitInsight is a Python + Streamlit portfolio project. It is independent of GitHub Inc.
