@@ -16,6 +16,22 @@ The existing Streamlit/Python backend is still present and available with `strea
 ---
 
 
+## GitInsight V2.1 — refreshed visual workspace
+
+The web experience now includes a cream editorial landing page (`index.html`) and a soft modular dashboard (`dashboard.html`) inspired by pastel product UI cards.
+
+- Dark, compact sidebar and four data-derived overview cards (repositories / Stars / Forks / primary languages).
+- Clean activity graph and developer panel. Decorative ring motifs are intentionally *not* presented as data trends.
+- New responsive mobile bottom navigation, larger tap targets, and a one-tap sharing link.
+- Keyboard-reachable activity bars, focus states, skeleton loading, reduced-motion support and no required web-font CDN.
+- The analytics are based on GitHub's public REST API. Project health checks and Markdown exports remain functional.
+
+**Preview locally:** From the repository folder, run `python3 -m http.server 8000` and open `http://localhost:8000/index.html` or `http://localhost:8000/dashboard.html`. The frontend needs no build tools and should be served over HTTP; direct `file://` opening may impose browser restrictions.
+
+**Testing:** The V2.1 browser UI was exercised using Playwright/Chromium with mocked API responses for desktop and mobile (four metrics, navigation, health check, report generation). Mock values belong to tests/screenshots only, **not** production data.
+
+---
+
 **一个无需登录、基于真实 GitHub 公开数据的可视化开发者分析工具。**
 
 GitInsight is a Python + Streamlit portfolio project. It is independent of GitHub Inc.
