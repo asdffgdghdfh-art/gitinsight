@@ -1,0 +1,1 @@
+"""Pure, testable analytics helpers."""
