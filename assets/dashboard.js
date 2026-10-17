@@ -16,7 +16,7 @@
     const el = $('status-message'); el.textContent = message || ''; el.classList.toggle('error', error);
   }
   function clearForLoading() {
-    ['stat-repos', 'stat-stars', 'stat-forks', 'activity-total', 'lang-number'].forEach(id => $(id).textContent = '—');
+    ['stat-repos', 'stat-stars', 'stat-forks', 'stat-languages', 'activity-total', 'lang-number'].forEach(id => $(id).textContent = '—');
     $('featured-repos').innerHTML = '<p class="loading-row">正在加载公开仓库…</p>';
     $('recent-events').innerHTML = '<p class="loading-row">正在获取公开活动…</p>';
     $('repository-list').innerHTML = '<p class="loading-row">正在获取仓库…</p>';
@@ -60,7 +60,7 @@
     if (pendingFetch) pendingFetch.abort();
     pendingFetch = new AbortController();
     const signal = pendingFetch.signal;
-    state.pending = true; $('search-form').querySelector('button').disabled = true;
+    state.pending = true; document.querySelector('.app-shell').classList.add('is-loading'); $('search-form').querySelector('button').disabled = true;
     $('username-input').value = user;
     clearForLoading(); status(`正在获取 @${user} 的公开数据…`);
     try {
@@ -95,8 +95,10 @@
       $('search-form').querySelector('button').disabled = false;
       $('sidebar-user').textContent = profile.name || profile.login;
       $('profile-name').textContent = profile.name || profile.login;
+      $('welcome-name').textContent = (profile.name || profile.login) + '.';
       $('profile-link').textContent = '@' + profile.login;
       $('profile-link').href = `https://github.com/${encodeURIComponent(profile.login)}`;
+      $('profile-open-link').href = $('profile-link').href;
       $('sidebar-avatar').src = profile.avatar_url || 'https://github.com/identicons/gitinsight.png';
       $('profile-avatar').src = profile.avatar_url || 'https://github.com/identicons/gitinsight.png';
       $('profile-bio').textContent = profile.bio || '正在用开源项目记录自己的开发旅程。';
@@ -111,7 +113,7 @@
       if (e.name !== 'AbortError') status(e.message, true);
     } finally {
       if (pendingFetch?.signal === signal) {
-        state.pending = false; $('search-form').querySelector('button').disabled = false;
+        state.pending = false; document.querySelector('.app-shell').classList.remove('is-loading'); $('search-form').querySelector('button').disabled = false;
       }
     }
   }
@@ -147,9 +149,10 @@
     $('stat-repos').textContent = humanNumber(t.repos);
     $('stat-stars').textContent = humanNumber(t.stars);
     $('stat-forks').textContent = humanNumber(t.forks);
+    $('stat-languages').textContent = humanNumber(langCounts().length);
     $('activity-total').textContent = humanNumber(state.events.length);
     const days = recentDays(); const max = Math.max(...days.map(d=>d.count),1);
-    $('activity-chart').innerHTML = days.map((d,ix) => `<div class="bar-item" title="${d.key}: ${d.count} 个公开事件"><div class="bar-base"></div><div class="bar-fill" style="height:${d.count ? Math.max(5,Math.round(d.count/max*98)) : 1}%"></div><span class="bar-label">${ix%2===0?d.label:''}</span><span class="bar-tip">${d.count} events</span></div>`).join('');
+    $('activity-chart').innerHTML = days.map((d,ix) => `<div class="bar-item" role="button" tabindex="0" aria-label="${d.key}：${d.count} 个公开事件" title="${d.key}: ${d.count} 个公开事件"><div class="bar-base"></div><div class="bar-fill" style="height:${d.count ? Math.max(5,Math.round(d.count/max*98)) : 1}%"></div><span class="bar-label">${ix%2===0?d.label:''}</span><span class="bar-tip">${d.count} events</span></div>`).join('');
     const ranked = originalRepos().slice().sort((a,b) => (b.stargazers_count||0) - (a.stargazers_count||0) || (b.pushed_at||'').localeCompare(a.pushed_at||'')).slice(0,4);
     $('featured-repos').innerHTML = ranked.length ? ranked.map(r => `<div class="feature-repo"><div><a href="${html(r.html_url)}" target="_blank" rel="noopener noreferrer">${html(r.name)}</a><p>${html(r.description || r.language || '暂无项目简介')}</p></div><span class="repo-stat">★ ${humanNumber(r.stargazers_count)}</span><span class="repo-stat">⑂ ${humanNumber(r.forks_count)}</span><span class="repo-arrow">↗</span></div>`).join('') : '<div class="empty-message">没有可展示的公开原创仓库。</div>';
   }
@@ -265,6 +268,7 @@
     state.active=page;
     document.querySelectorAll('.page-section').forEach(el=>el.classList.toggle('is-visible',el.id===`view-${page}`));
     document.querySelectorAll('.side-nav a').forEach(el=>el.classList.toggle('active',el.dataset.page===page));
+    document.querySelectorAll('[data-mobile-page]').forEach(el=>{const selected = el.dataset.mobilePage===page;el.classList.toggle('active',selected);el.setAttribute('aria-current',selected?'page':'false');});
     $('page-breadcrumb').textContent=page.toUpperCase();
     $('sidebar').classList.remove('open'); $('sidebar-overlay').classList.remove('open');
     $('menu-toggle').setAttribute('aria-expanded','false');
@@ -272,9 +276,11 @@
   }
   function init() {
     $('search-form').addEventListener('submit',event=>{event.preventDefault();loadUser($('username-input').value.trim());});
+    document.querySelectorAll('[data-mobile-page]').forEach(button=>button.addEventListener('click',()=>{ location.hash = button.dataset.mobilePage; navigate(button.dataset.mobilePage); }));
+    $('top-date').textContent = new Date().toLocaleDateString('zh-CN', {month:'short',day:'numeric'});
     $('menu-toggle').addEventListener('click',()=>{const open=$('sidebar').classList.toggle('open');$('sidebar-overlay').classList.toggle('open',open);$('menu-toggle').setAttribute('aria-expanded',String(open));});
     $('sidebar-overlay').addEventListener('click',()=>{$('sidebar').classList.remove('open');$('sidebar-overlay').classList.remove('open');});
-    document.querySelectorAll('.side-nav a').forEach(a=>a.addEventListener('click',()=>navigate(a.dataset.page)));
+    document.querySelectorAll('.side-nav a').forEach(a=>a.addEventListener('click',event=>{ event.preventDefault(); location.hash = a.dataset.page; navigate(a.dataset.page); }));
     document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{location.hash=b.dataset.go;navigate(b.dataset.go);}));
     window.addEventListener('hashchange',()=>navigate(location.hash.slice(1)));
     for(const id of ['repo-search','language-filter','repo-sort','include-forks']) $(id).addEventListener('input',filterRepositories);
